@@ -1,0 +1,10 @@
+[package]
+name = "countDays"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.38"
+time = { version = "0.3.36", features = ["formatting", "parsing", "serde-human-readable", "macros", "rand"] }
