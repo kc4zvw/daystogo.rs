@@ -1,5 +1,5 @@
 [package]
-name = "countDays"
+name = "count_days"
 version = "0.1.0"
 edition = "2021"
 
