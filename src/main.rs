@@ -4,7 +4,8 @@
 	*    Author : David Billsbrough <billsbrough@gmail.com>
 	*   License : GNU General Public License -- version 2
 	*  Warranty : None
-	*   Purpose : Calculate the difference in days between two dates (rust)
+	*  Language : Rust 1.78
+	*   Purpose : Calculate the difference in days between two dates
 	*
 	*   Created : Friday, May 31, 2024 at 20:04:26 PM (EDT)
 	*   Version : $Revision: 0.25 $
@@ -18,9 +19,10 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 use std::time::SystemTime;
+
 use chrono::{DateTime, FixedOffset, Local, Utc};
-use chrono::NaiveDateTime as NDT;
-use chrono::naive::NaiveDate as ND;
+use datetime::convenience::Today;
+use chrono::{NaiveDate, NaiveDateTime};
 
 
 // The output is wrapped in a Result to allow matching on errors.
@@ -41,54 +43,76 @@ fn get_home_dir() -> String {
 	return my_home
 }
 
-fn formatted_date(_d: Output) ->  &'static str {
+fn formatted_date(_d: Output) -> String {
 
 	let local_time = Local::now();
+	let _utc_now: DateTime<Utc> = Utc::now();
 
-	let _date_time: NDT = ND::from_ymd_opt(2024, 06, 01).unwrap().and_hms_opt(17, 33, 44).unwrap();
+	println!("{:?}", local_time);
 
-	// let utc_time = DateTime::<Utc>::from_utc(local_time.naive_utc(), Utc);
+	let utc_time = DateTime::<Utc>::from_utc(local_time.naive_utc(), Utc);
 	let _est_timezone = FixedOffset::west_opt(5 * 3600);
 	let _cst_timezone = FixedOffset::west_opt(6 * 3600);
+	let local_timezone = Local::now();
+
+	let formatted = format!("{}", local_time.format("%A, %B %d, %Y at %H:%M:%S %p"));
+
+	let formatted2 = format!("{}", local_time.format("%A, %B %d, %Y at %H:%M:%S %p (%Z)"));
 
 	println!("Local time now is {}", local_time);
-	// println!("UTC time now is {}", utc_time);
+	println!("UTC time now is {}", utc_time);
 	// println!("Time in East standard time now is {}", utc_time.with_timezone(&est_timezone));
-	// println!("Time in Central standard time now is {}", utc_time.with_timezone(&cst_timezone));
+	// println!("Time in Central standard time now is {}", utc_time.with_timezone(&_cst_timezone));
+	println!("{}", "");
 
-	let _now: DateTime<Utc> = Utc::now();
-
-	let result: &str = "UTC now in a custom format is: {}";
+	let time_str: String = formatted2;
+	let result: String = formatted;
 
 	return result; 
 }
 
 pub fn unix_coverter(date: String) -> i64 {
 
-	let full_date : Vec<_> = date.split("/").collect();
-	let temp_yt : Vec<_> = full_date[2].split_whitespace().collect();
-	let temp_t : Vec<_> = temp_yt[1].split(":").collect();
+	let vdate: Vec<&str> = date.split(&['/', ' ', ':', '~'][..]).collect();
+	// assert_eq!(vdate, ["2024", "05", "28", ""]);
 
-	let date_fmt = ND::from_ymd(temp_yt[0].parse::<i32>().unwrap(),
-		 full_date[0].parse::<u32>().unwrap(),
-		full_date[1].parse::<u32>().unwrap()
-		).and_hms_opt(temp_t[0].parse::<u32>().unwrap(),
-		 temp_t[1].parse::<u32>().unwrap(), 00);
-    
-	println!("{}", date_fmt);
+	let month = vdate[0].parse::<u32>().unwrap();
+	let day = vdate[1].parse::<u32>().unwrap();
+	let year = vdate[2].parse::<i32>().unwrap();
 
-	let date_unix = NDT::timestamp(&date_fmt);
-       
+	/* parse_from_str("2014-5-17T12:34:56+09:30", "%Y-%m-%dT%H:%M:%S%z"), */
+
+	let date_fmt = NaiveDate::from_ymd_opt(year, month, day).unwrap().and_hms_opt(12, 00, 00).unwrap();
+
+	// println!("{:?}", date_fmt);
+
+	let date_unix: i64 = NaiveDateTime::timestamp(&date_fmt);
 	let result_unix = date_unix * 1;
  
-	result_unix
+	return result_unix
 }
 
 fn process_line(line: &str) {
-	let _year: i32 = 2024;
-	let _month: u32 = 06;
-	let _day: u32 = 01;
 
+	let local_time = Local::now();
+
+	
+	println!("{:?}", local_time);
+
+	let today:LocalDate = LocalDate::today();
+
+	// let (curdate, curname) = local_time.split_at(11);
+
+	println!("{:?}", today);
+	//println!("{:?}", curname);
+
+	let _year: u32 = 2024;
+	let _month: i32 = 6;
+	let _day: u32 = 2;
+
+	println!("{}", _year);
+	println!("{}", _month);
+	println!("{}", _day);
 
 	let aline = line.trim();
 	// println!("Line: '{:?}'", aline);
@@ -102,7 +126,7 @@ fn process_line(line: &str) {
 	let month = vdate[1].parse::<u32>().unwrap();
 	let day = vdate[2].parse::<u32>().unwrap();
 
-	let _parse_from_str = NDT::parse_from_str;
+	let _parse_from_str = NaiveDateTime::parse_from_str;
 
 	let _now: i64 = 0;
 
@@ -117,12 +141,8 @@ fn process_line(line: &str) {
 
 	let date_target: i64 = unix_coverter(date_ymd);
 	let date_source: i64 = unix_coverter(date_now);
-
-	// let mut date_target: i64 = date_time.and_utc().timestamp();
-	let day_count: i64 = ((date_target - date_source) / 86400) + 0;
+	let day_count: i64 = ((date_target - date_source) / 86400) + 1;
 	let diff: i64;
-
-    //println!("{:?}", datediff(ND::from_ymd(year, month, day), ND::from_ymd(_year, _month, _day)));
 
 	if day_count <= -2 {
 		diff = day_count.abs();
@@ -145,13 +165,12 @@ fn main() {
 
 	let today_now = SystemTime::now();
 
-	let _date_str: &str = formatted_date(today_now);
-	// let dateStr = String::from("Friday, May 31, 2024 at 21:25:15 PM");
+	let _date_str: String = formatted_date(today_now);
 
 	println!();
 	println!("Days To Go Calculator (Rust version)");
 	println!();
-	println!("Today is {:?} (local).", _date_str);
+	println!("Today is {} (local).", _date_str);
 	println!();
 
 	let mut _filename = String::from(".calendar");
